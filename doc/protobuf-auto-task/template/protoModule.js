@@ -1,5 +1,9 @@
 function baseProtoModule(messageContent, cacheContent = {}) {
-  let cacheMessage = cacheContent[messageContent.name];
+  const name =
+    messageContent.name.indexOf(".") > 0
+      ? messageContent.name.split(".")[1]
+      : messageContent.name;
+  let cacheMessage = cacheContent[name];
   let str = "";
   if (cacheMessage) {
     cacheMessage.forEach((item) => {

@@ -84,7 +84,8 @@ function startTask() {
 
 function complierMsg(messageContent, bufCode, cacheMsgReader) {
   messageContent.fieldsArray.forEach((item) => {
-    const itemType = item.type;
+    const itemType =
+      item.type.indexOf(".") > 0 ? item.type.split(".")[1] : item.type;
     if (!basetype.includes(itemType)) {
       if (bufCode[itemType]) {
         cacheMsgReader.push({
