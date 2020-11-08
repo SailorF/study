@@ -1,12 +1,12 @@
 function deepCopy(data) {
-  if (typeof data !== 'object' || data === null) {
-    throw new TypeError('传入参数不是对象')
+  if (typeof data !== "object" || data === null) {
+    throw new TypeError("传入参数不是对象");
   }
   let newData = {};
   const dataKeys = Object.keys(data);
-  dataKeys.forEach(value => {
+  dataKeys.forEach((value) => {
     const currentDataValue = data[value];
-    // 基本数据类型的值和函数直接赋值拷贝 
+    // 基本数据类型的值和函数直接赋值拷贝
     if (typeof currentDataValue !== "object" || currentDataValue === null) {
       newData[value] = currentDataValue;
     } else if (Array.isArray(currentDataValue)) {
@@ -35,13 +35,16 @@ var data = {
   friends: [
     { name: "summer", sex: "woman" },
     { name: "daWen", sex: "woman" },
-    { name: "yang", sex: "man" }],
+    { name: "yang", sex: "man" },
+  ],
   work: {
     time: "2019",
-    project: { name: "test", obtain: ["css", "html", "js"] }
+    project: { name: "test", obtain: ["css", "html", "js"] },
   },
-  play: function () { console.log("玩滑板"); }
-}
+  play: function () {
+    console.log("玩滑板");
+  },
+};
 
 const a = deepCopy(data);
 console.log(a);

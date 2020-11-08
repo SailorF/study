@@ -3,22 +3,22 @@ function curry(fn, len = fn.length) {
 }
 
 function _curry(fn, len, ...args) {
-  return function(...params) {
-    console.log(params)
+  return function (...params) {
+    console.log(params);
     let _args = [...args, ...params];
     if (_args.length >= len) {
       return fn.apply(this, _args);
     } else {
       return _curry.call(this, fn, len, ...args);
     }
-  }
+  };
 }
 
-let _fn = curry(function(a,b,c,d,e){
-  console.log(a,b,c,d,e)
+let _fn = curry(function (a, b, c, d, e) {
+  console.log(a, b, c, d, e);
 });
 
-_fn(1,2,3,4,5);     // print: 1,2,3,4,5
-_fn(1)(2)(3,4,5);   // print: 1,2,3,4,5
-_fn(1,2)(3,4)(5);   // print: 1,2,3,4,5
+_fn(1, 2, 3, 4, 5); // print: 1,2,3,4,5
+_fn(1)(2)(3, 4, 5); // print: 1,2,3,4,5
+_fn(1, 2)(3, 4)(5); // print: 1,2,3,4,5
 _fn(1)(2)(3)(4)(5); // print: 1,2,3,4,5

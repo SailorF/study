@@ -1,9 +1,8 @@
 function myNew(fn) {
-
   const target = Object.create(fn.prototype);
   const args = [].slice.call(arguments, 1);
-  const newFn = fn.apply(target, args)
-  if (typeof newFn === 'function') {
+  const newFn = fn.apply(target, args);
+  if (typeof newFn === "function") {
     return newFn;
   }
   return target;
@@ -19,7 +18,7 @@ function myCall(context, ...args) {
 
 function myBind(context, args) {
   const self = this;
-  return function() {
-    self.apply(context, args)
-  }
+  return function () {
+    self.apply(context, args);
+  };
 }

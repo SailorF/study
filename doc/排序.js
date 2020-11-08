@@ -1,5 +1,5 @@
 let testArr = [];
-while(testArr.length < 1000) {
+while (testArr.length < 1000) {
   testArr.push(Math.floor(Math.random() * 10000));
 }
 
@@ -85,7 +85,7 @@ function insertionSort(arr) {
  *                /                                         \
  *               3                                           9
  *              /                                        [8] [9] [10]
- *          [2,1] [3] []  
+ *          [2,1] [3] []
  *            /
  *           1
  *          /
@@ -96,14 +96,14 @@ function quickSort(arr) {
     return arr;
   }
 
-  var randomNum = arr[Math.floor(arr.length * Math.random())]
+  var randomNum = arr[Math.floor(arr.length * Math.random())];
   var left = [];
   var right = [];
   var middle = [];
   for (var i = 0; i < arr.length; i++) {
     var val = arr[i];
     if (val < randomNum) {
-      left.push(val)
+      left.push(val);
     } else if (val > randomNum) {
       right.push(val);
     } else if (val === randomNum) {
@@ -127,9 +127,9 @@ function quickSort(arr) {
  *                      /                           \
  *              [5,6] [9,2]                  [1,8,4] [3,7,10]
  *                   /                              \
- *             [5,6] [2, 9]                  [1][4,8] [3][7,10]     
+ *             [5,6] [2, 9]                  [1][4,8] [3][7,10]
  *                 ||                          ...      ...
- *             [2,5,6,9]                       ||       ||     
+ *             [2,5,6,9]                       ||       ||
  *                 ||                         [1,4,8]  [3,7,10]
  *                 ||                             \        /
  *             [2,5,6,9]                        [1,3,4,7,8,10]
@@ -144,23 +144,21 @@ function mergeSort(arr) {
   var midNum = Math.floor(arr.length / 2);
   var left = mergeSort(arr.slice(0, midNum));
   var right = mergeSort(arr.slice(midNum));
-  var result = []
+  var result = [];
 
   while (left.length && right.length) {
     if (left[0] < right[0]) {
-      result.push(left.shift())
+      result.push(left.shift());
     } else {
-      result.push(right.shift())
+      result.push(right.shift());
     }
   }
 
-  while (left.length)
-        result.push(left.shift());
+  while (left.length) result.push(left.shift());
 
-  while (right.length)
-      result.push(right.shift());
+  while (right.length) result.push(right.shift());
 
   return result;
 }
 
-insertionSort([5,6,9,2,1,8,4,3,7,10]);
+insertionSort([5, 6, 9, 2, 1, 8, 4, 3, 7, 10]);

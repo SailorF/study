@@ -17,6 +17,4 @@
  * @param {TreeNode} root
  * @return {boolean}
  */
-var isSubPath = function(head, root) {
-
-};
+var isSubPath = function (head, root) {};

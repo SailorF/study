@@ -1,4 +1,4 @@
-var multiply = function(num1, num2) {
+var multiply = function (num1, num2) {
   if (num1 == "0" || num2 == "0") return "0";
   let l1 = num1.length,
     l2 = num2.length;
@@ -20,5 +20,5 @@ var multiply = function(num1, num2) {
 };
 
 // "800207406037324579815815608581"
-console.log(multiply('120', '15'))
+console.log(multiply("120", "15"));
 // console.log(multiply('9333852702227987', '85731737104263'))

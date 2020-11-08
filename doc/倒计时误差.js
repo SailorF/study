@@ -1,7 +1,7 @@
 // 继续线程占用
 setInterval(function () {
   var n = 0;
-  while(n++ < 1000000000);
+  while (n++ < 1000000000);
 }, 0);
 
 // 倒计时
@@ -21,15 +21,25 @@ function countDownStart() {
   offset = new Date().getTime() - (start + count * interval);
   nextTime = interval - offset;
 
-  if (nextTime < 0) { nextTime = 0; }
+  if (nextTime < 0) {
+    nextTime = 0;
+  }
 
   ms -= interval;
 
-  console.log("误差: " + offset + "ms, 下一次执行: " + nextTime + "ms后，离活动开始还有: " + ms + "ms");
+  console.log(
+    "误差: " +
+      offset +
+      "ms, 下一次执行: " +
+      nextTime +
+      "ms后，离活动开始还有: " +
+      ms +
+      "ms"
+  );
 
   if (ms < 0) {
-      clearTimeout(timer);
+    clearTimeout(timer);
   } else {
-      timer = setTimeout(countDownStart, nextTime);
+    timer = setTimeout(countDownStart, nextTime);
   }
 }

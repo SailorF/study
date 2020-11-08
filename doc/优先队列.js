@@ -5,12 +5,14 @@ class Queue {
 
   /**
    * @description 入队
-   * @param {object} ele 
+   * @param {object} ele
    */
-  enqueue(ele = {
-    name: '',
-    level: 0,
-  }) {
+  enqueue(
+    ele = {
+      name: "",
+      level: 0,
+    }
+  ) {
     this.queue.push(ele);
   }
   /**
@@ -19,7 +21,7 @@ class Queue {
    */
   dequeue() {
     if (!this.queue.length) {
-      console.warn('Queue is Empty!');
+      console.warn("Queue is Empty!");
       return;
     }
     let level = 0;
@@ -45,32 +47,32 @@ class Queue {
 
 const workList = new Queue();
 workList.enqueue({
-  name: 'Bob',
+  name: "Bob",
   level: 0,
 });
 
 workList.enqueue({
-  name: 'Paul',
+  name: "Paul",
   level: 5,
 });
 
 workList.enqueue({
-  name: 'Marry',
+  name: "Marry",
   level: 2,
 });
 
 workList.enqueue({
-  name: 'Tom',
+  name: "Tom",
   level: 0,
 });
 
 workList.enqueue({
-  name: 'John',
+  name: "John",
   level: 0,
 });
 
 workList.enqueue({
-  name: 'Sailor',
+  name: "Sailor",
   level: 1,
 });
 
