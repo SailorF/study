@@ -4,13 +4,14 @@ const protobuf = require("protobufjs");
 const baseProtoModule = require("./template/protoModule");
 const baseApiModule = require("./template/apiModule");
 const baseConfModule = require("./template/confModule");
+const baseTypeModule = require("./template/typeModule");
 const childProgress = require("child_process");
 
 const protoFilePath = path.resolve(__dirname, "./test.proto");
 const reg = /@funid (?<funid>\d+)[\s|\S]+?message (?<name>(\w+))[\s|\S]+?{(?<messageContent>[\s|\S]+?)}/g;
 const basetype = [
   "int",
-  "init32",
+  "int32",
   "int64",
   "float",
   "double",
@@ -70,6 +71,7 @@ function startTask() {
         // 5.遍历消息体列表, 传入未被加载的消息体obj, 写入proto文件
         for (let i = 0; i < funArr.length; i++) {
           writeProtoFile(funArr[i], cacheMsgObj);
+          writeTypeFile(funArr[i], cacheMsgObj);
         }
         // 6.写入配置文件
         writeConfFile(funArr);
@@ -82,17 +84,22 @@ function startTask() {
   });
 }
 
-function complierMsg(messageContent, bufCode, cacheMsgReader) {
+function complierMsg(messageContent, bufCode, cacheMsgReader, parentName = "") {
   messageContent.fieldsArray.forEach((item) => {
     const itemType =
       item.type.indexOf(".") > 0 ? item.type.split(".")[1] : item.type;
     if (!basetype.includes(itemType)) {
       if (bufCode[itemType]) {
         cacheMsgReader.push({
-          parent: messageContent.name,
+          parent: parentName || messageContent.name,
           name: itemType,
         });
-        complierMsg(bufCode[itemType]);
+        complierMsg(
+          bufCode[itemType],
+          bufCode,
+          cacheMsgReader,
+          messageContent.name
+        );
       } else {
         console.log("找不到消息体", itemType);
       }
@@ -107,7 +114,24 @@ function writeProtoFile(messageContent, cache) {
     filePath,
     baseProtoModule(messageContent, cache),
     "utf-8",
-    (err, code) => {
+    (err, _code) => {
+      if (err) {
+        console.log(`写入${fileName}失败`);
+        return;
+      }
+      console.log(`写入${fileName}成功`);
+    }
+  );
+}
+
+function writeTypeFile(messageContent, cache) {
+  const fileName = `./type/${messageContent.name}.ts`;
+  const filePath = path.resolve(__dirname, fileName);
+  fs.writeFileSync(
+    filePath,
+    baseTypeModule(messageContent, cache),
+    "utf-8",
+    (err, _code) => {
       if (err) {
         console.log(`写入${fileName}失败`);
         return;
@@ -129,14 +153,14 @@ function writeConfFile(funArr) {
   const AssingApi = Object.assign({}, ...newApi);
   const apiPath = path.resolve(__dirname, "./funConf/FUNAPI.ts");
   const confPath = path.resolve(__dirname, "./funConf/FUNCONF.ts");
-  fs.writeFileSync(apiPath, baseApiModule(AssingApi), "utf-8", (err, code) => {
+  fs.writeFileSync(apiPath, baseApiModule(AssingApi), "utf-8", (err, _code) => {
     console.log(err);
   });
   fs.writeFileSync(
     confPath,
     baseConfModule(AssingApi),
     "utf-8",
-    (err, code) => {
+    (err, _code) => {
       console.log(err);
     }
   );
@@ -148,7 +172,7 @@ startTask().then(() => {
     __dirname,
     "./node_modules/prettier/bin-prettier.js"
   );
-  childProgress.exec(`node ${filePath} --write .`, (err, code) => {
+  childProgress.exec(`node ${filePath} --write .`, (err, _code) => {
     if (err) {
       console.log(err);
       return;
