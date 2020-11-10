@@ -1,11 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const protobuf = require("protobufjs");
+const root = new protobuf.Root();
+const childProgress = require("child_process");
 const baseProtoModule = require("./template/protoModule");
 const baseApiModule = require("./template/apiModule");
 const baseConfModule = require("./template/confModule");
 const baseTypeModule = require("./template/typeModule");
-const childProgress = require("child_process");
 
 const protoFilePath = path.resolve(__dirname, "./test.proto");
 const reg = /@funid (?<funid>\d+)[\s|\S]+?message (?<name>(\w+))[\s|\S]+?{(?<messageContent>[\s|\S]+?)}/g;
@@ -29,6 +30,8 @@ function startTask() {
       const funArr = [];
       const cacheMsgReader = [];
       const cacheMsgObj = {};
+      const interfaceObj = {};
+      const cacheInterfaceObj = {};
       do {
         funArr.push({
           funid: getCode.groups.funid,
@@ -38,11 +41,15 @@ function startTask() {
         });
       } while ((getCode = reg.exec(code)) !== null);
       // 2.通过protobuf解析proto的信息,获取proto对象
-      protobuf.load(protoFilePath, (_err, bufCode) => {
+      root.load(protoFilePath, { keepCase: true }, (_err, bufCode) => {
         for (let i = 0; i < funArr.length; i++) {
           // console.log(funArr[i].funid);
           // console.log(bufCode[funArr[i].name]);
           const messageItem = bufCode[funArr[i].name];
+          // 通过interfaceItem也可以解析，翻译并生成typescript的接口定义文件， 不过无法获取注释
+          // TODO: 通过interfaceItem 翻译更加简洁
+          const interfaceItem = messageItem.toJSON();
+          interfaceObj[funArr[i].name] = interfaceItem;
           // 3. 获取消息item, 如果type不为基础类型, 则递归遍历item中的字段, 获取对应消息体, 并写入缓存中
           complierMsg(messageItem, bufCode, cacheMsgReader);
         }
