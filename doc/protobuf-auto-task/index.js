@@ -6,9 +6,10 @@ const childProgress = require("child_process");
 const baseProtoModule = require("./template/protoModule");
 const baseApiModule = require("./template/apiModule");
 const baseConfModule = require("./template/confModule");
-const baseTypeModule = require("./template/typeModule");
+const baseTypeModule = require("./template/typeModuleWithJSON");
 const { GET_MESSAGE_REG, BASE_TYPE } = require("./resource");
 
+// const protoFilePath = path.resolve(__dirname, "./DIY_mbl_interface.proto");
 const protoFilePath = path.resolve(__dirname, "./test.proto");
 
 function startTask() {
@@ -19,6 +20,8 @@ function startTask() {
       const funArr = [];
       const cacheMsgReader = [];
       const cacheMsgObj = {};
+      const interfaceObj = {};
+
       do {
         funArr.push({
           funid: getCode.groups.funid,
@@ -27,17 +30,18 @@ function startTask() {
           parent: null,
         });
       } while ((getCode = GET_MESSAGE_REG.exec(code)) !== null);
+
       // 2.通过protobuf解析proto的信息,获取proto对象
       root.load(protoFilePath, { keepCase: true }, (_err, bufCode) => {
         for (let i = 0; i < funArr.length; i++) {
           // console.log(funArr[i].funid);
           // console.log(bufCode[funArr[i].name]);
           const messageItem = bufCode[funArr[i].name];
-          // TODO: 通过interfaceItem 翻译更加简洁, 翻译并生成typescript的接口定义文件, 不过无法获取注释
-          // console.log(messageItem.toJSON());
+          interfaceObj[funArr[i].name] = messageItem.toJSON().fields;
           // 3. 获取消息item, 如果type不为基础类型, 则递归遍历item中的字段, 获取对应消息体, 并写入缓存中
           complierMsg(messageItem, bufCode, cacheMsgReader);
         }
+
         // 4. 获取缓存消息体后, 重新读取未被加载的消息体, 并将消息体推入obj
         for (let i = 0; i < cacheMsgReader.length; i++) {
           const item = cacheMsgReader[i];
@@ -45,6 +49,9 @@ function startTask() {
             `message ${item.messageName}[\\s|\\S]+?{(?<messageContent>[\\s|\\S]+?)}`
           );
           const message = reg.exec(code);
+          interfaceObj[item.messageName] = bufCode[
+            item.messageName
+          ].toJSON().fields;
           if (cacheMsgObj[item.parent]) {
             cacheMsgObj[item.parent].push({
               code: message.groups.messageContent,
@@ -71,7 +78,7 @@ function startTask() {
           // 写入proto文件
           writeProtoFile(funArr[i], cacheMsgObj);
           // 写入接口定义文件
-          writeTypeFile(funArr[i], cacheMsgObj);
+          writeTypeFile(funArr[i], interfaceObj, cacheMsgObj);
         }
         // 写入配置文件
         writeConfFile(funArr);
@@ -132,12 +139,12 @@ function writeProtoFile(messageContent, cache) {
   );
 }
 
-function writeTypeFile(messageContent, cache) {
+function writeTypeFile(messageContent, interfaceObj, cache) {
   const fileName = `./type/${messageContent.name}.ts`;
   const filePath = path.resolve(__dirname, fileName);
   fs.writeFile(
     filePath,
-    baseTypeModule(messageContent, cache),
+    baseTypeModule(messageContent, interfaceObj, cache),
     "utf-8",
     (err, _code) => {
       if (err) {
