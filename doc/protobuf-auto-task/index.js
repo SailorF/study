@@ -7,31 +7,18 @@ const baseProtoModule = require("./template/protoModule");
 const baseApiModule = require("./template/apiModule");
 const baseConfModule = require("./template/confModule");
 const baseTypeModule = require("./template/typeModule");
+const { GET_MESSAGE_REG, BASE_TYPE } = require("./resource");
 
 const protoFilePath = path.resolve(__dirname, "./test.proto");
-const reg = /@funid (?<funid>\d+)[\s|\S]+?message (?<name>(\w+))[\s|\S]+?{(?<messageContent>[\s|\S]+?)}/g;
-const basetype = [
-  "int",
-  "int32",
-  "int64",
-  "float",
-  "double",
-  "long",
-  "short",
-  "string",
-  "bool",
-];
 
 function startTask() {
   return new Promise((resolve) => {
     fs.readFile(protoFilePath, (_e, code) => {
       // 1.读取proto文件, 获取具有funid的接口
-      var getCode = reg.exec(code);
+      var getCode = GET_MESSAGE_REG.exec(code);
       const funArr = [];
       const cacheMsgReader = [];
       const cacheMsgObj = {};
-      const interfaceObj = {};
-      const cacheInterfaceObj = {};
       do {
         funArr.push({
           funid: getCode.groups.funid,
@@ -39,17 +26,15 @@ function startTask() {
           code: getCode.groups.messageContent,
           parent: null,
         });
-      } while ((getCode = reg.exec(code)) !== null);
+      } while ((getCode = GET_MESSAGE_REG.exec(code)) !== null);
       // 2.通过protobuf解析proto的信息,获取proto对象
       root.load(protoFilePath, { keepCase: true }, (_err, bufCode) => {
         for (let i = 0; i < funArr.length; i++) {
           // console.log(funArr[i].funid);
           // console.log(bufCode[funArr[i].name]);
           const messageItem = bufCode[funArr[i].name];
-          // 通过interfaceItem也可以解析，翻译并生成typescript的接口定义文件， 不过无法获取注释
-          // TODO: 通过interfaceItem 翻译更加简洁
-          const interfaceItem = messageItem.toJSON();
-          interfaceObj[funArr[i].name] = interfaceItem;
+          // TODO: 通过interfaceItem 翻译更加简洁, 翻译并生成typescript的接口定义文件, 不过无法获取注释
+          // console.log(messageItem.toJSON());
           // 3. 获取消息item, 如果type不为基础类型, 则递归遍历item中的字段, 获取对应消息体, 并写入缓存中
           complierMsg(messageItem, bufCode, cacheMsgReader);
         }
@@ -57,19 +42,25 @@ function startTask() {
         for (let i = 0; i < cacheMsgReader.length; i++) {
           const item = cacheMsgReader[i];
           const reg = new RegExp(
-            `message ${item.name}[\\s|\\S]+?{(?<messageContent>[\\s|\\S]+?)}`
+            `message ${item.messageName}[\\s|\\S]+?{(?<messageContent>[\\s|\\S]+?)}`
           );
           const message = reg.exec(code);
           if (cacheMsgObj[item.parent]) {
             cacheMsgObj[item.parent].push({
               code: message.groups.messageContent,
-              name: item.name,
+              name: item.messageName,
+              rule: item.rule,
+              type: item.type,
+              key: item.key,
             });
           } else {
             cacheMsgObj[item.parent] = [
               {
                 code: message.groups.messageContent,
-                name: item.name,
+                name: item.messageName,
+                rule: item.rule,
+                type: item.type,
+                key: item.key,
               },
             ];
           }
@@ -77,12 +68,14 @@ function startTask() {
 
         // 5.遍历消息体列表, 传入未被加载的消息体obj, 写入proto文件
         for (let i = 0; i < funArr.length; i++) {
+          // 写入proto文件
           writeProtoFile(funArr[i], cacheMsgObj);
+          // 写入接口定义文件
           writeTypeFile(funArr[i], cacheMsgObj);
         }
-        // 6.写入配置文件
+        // 写入配置文件
         writeConfFile(funArr);
-        // 7.格式化文件
+        // 6. 格式化文件
         setTimeout(() => {
           resolve();
         }, 3000);
@@ -95,11 +88,15 @@ function complierMsg(messageContent, bufCode, cacheMsgReader, parentName = "") {
   messageContent.fieldsArray.forEach((item) => {
     const itemType =
       item.type.indexOf(".") > 0 ? item.type.split(".")[1] : item.type;
-    if (!basetype.includes(itemType)) {
+    if (!BASE_TYPE.includes(itemType)) {
       if (bufCode[itemType]) {
+        // 递归需要传递正确的父级, 使proto构建可以打到正确的位置
         cacheMsgReader.push({
           parent: parentName || messageContent.name,
-          name: itemType,
+          messageName: itemType,
+          rule: item.rule,
+          type: item.type,
+          key: item.name,
         });
         complierMsg(
           bufCode[itemType],
@@ -117,16 +114,20 @@ function complierMsg(messageContent, bufCode, cacheMsgReader, parentName = "") {
 function writeProtoFile(messageContent, cache) {
   const fileName = `./proto/${messageContent.name}.js`;
   const filePath = path.resolve(__dirname, fileName);
-  fs.writeFileSync(
+  fs.writeFile(
     filePath,
     baseProtoModule(messageContent, cache),
     "utf-8",
     (err, _code) => {
       if (err) {
-        console.log(`写入${fileName}失败`);
+        console.log(
+          `自动写入任务: \n功能号${messageContent.funid} \npath:${fileName}失败\n`
+        );
         return;
       }
-      console.log(`写入${fileName}成功`);
+      console.log(
+        `自动写入任务: \n功能号${messageContent.funid} \npath:${fileName}成功\n`
+      );
     }
   );
 }
@@ -134,24 +135,29 @@ function writeProtoFile(messageContent, cache) {
 function writeTypeFile(messageContent, cache) {
   const fileName = `./type/${messageContent.name}.ts`;
   const filePath = path.resolve(__dirname, fileName);
-  fs.writeFileSync(
+  fs.writeFile(
     filePath,
     baseTypeModule(messageContent, cache),
     "utf-8",
     (err, _code) => {
       if (err) {
-        console.log(`写入${fileName}失败`);
+        console.log(
+          `自动写入任务: \n功能号${messageContent.funid} \npath:${fileName}失败\n`
+        );
         return;
       }
-      console.log(`写入${fileName}成功`);
+      console.log(
+        `自动写入任务: \n功能号${messageContent.funid} \npath:${fileName}成功\n`
+      );
     }
   );
 }
 
 function writeConfFile(funArr) {
-  const filePath = path.resolve(__dirname, "./funConf/index.ts");
-  const { api, conf } = require(filePath);
-  console.log(api, conf);
+  // 读取旧的配置, 合并配置
+  // const filePath = path.resolve(__dirname, "./funConf/index.ts");
+  // const { api, conf } = require(filePath);
+  // console.log(api, conf);
   const newApi = funArr.map((item) => {
     return {
       [item.name]: item.funid,
@@ -160,17 +166,8 @@ function writeConfFile(funArr) {
   const AssingApi = Object.assign({}, ...newApi);
   const apiPath = path.resolve(__dirname, "./funConf/FUNAPI.ts");
   const confPath = path.resolve(__dirname, "./funConf/FUNCONF.ts");
-  fs.writeFileSync(apiPath, baseApiModule(AssingApi), "utf-8", (err, _code) => {
-    console.log(err);
-  });
-  fs.writeFileSync(
-    confPath,
-    baseConfModule(AssingApi),
-    "utf-8",
-    (err, _code) => {
-      console.log(err);
-    }
-  );
+  fs.writeFileSync(apiPath, baseApiModule(AssingApi), "utf-8");
+  fs.writeFileSync(confPath, baseConfModule(AssingApi), "utf-8");
 }
 
 // "node ./node_modules/prettier/bin-prettier.js --write ."

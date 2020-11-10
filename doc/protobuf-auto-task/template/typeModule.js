@@ -1,17 +1,7 @@
-const basetype = [
-  "int",
-  "int32",
-  "int64",
-  "float",
-  "double",
-  "long",
-  "short",
-  "string",
-  "bool",
-];
-const plustype = ["GFPB"];
+const { BASE_TYPE, NEED_CHANGE_NUMBER } = require("../resource");
+
 const interfaceTReg = new RegExp(
-  `(?<type>${basetype.join(
+  `(?<type>${BASE_TYPE.join(
     "|"
   )}) (?<key>\\w+)[\\s|\\S]+?;(?<note>[\\s|\\S]*?\n)`,
   "g"
@@ -20,34 +10,26 @@ const interfaceTReg = new RegExp(
 function getBaseBody(code) {
   let getCode = interfaceTReg.exec(code);
   const interfaceArr = [];
-  do {
-    interfaceArr.push({
-      value: getCode.groups.type,
-      key: getCode.groups.key,
-      note: getCode.groups.note,
-    });
-  } while ((getCode = interfaceTReg.exec(code)) !== null);
+  if (getCode) {
+    do {
+      interfaceArr.push({
+        value: getCode.groups.type,
+        key: getCode.groups.key,
+        note: getCode.groups.note,
+      });
+    } while ((getCode = interfaceTReg.exec(code)) !== null);
+  }
   return interfaceArr;
 }
 
 function formatBody(code) {
   const body = getBaseBody(code);
-  const changeNumber = [
-    "int",
-    "int32",
-    "int64",
-    "float",
-    "double",
-    "long",
-    "short",
-  ];
   return `
     ${body
       .map((item) => {
-        return `
-        /** ${item.note.replace("//", "")} */
+        return `/** ${item.note.replace(/\/\/|\n|\s/g, "")} */
         ${item.key}: ${
-          changeNumber.includes(item.value) ? "number" : item.value
+          NEED_CHANGE_NUMBER.includes(item.value) ? "number" : item.value
         };
       `;
       })
@@ -63,16 +45,25 @@ function baseTypeModule(messageContent, cacheContent = {}) {
       : messageContent.name;
   let cacheMessage = cacheContent[name];
   let str = "";
+  let parentStr = "";
   if (cacheMessage) {
     cacheMessage.forEach((item) => {
+      parentStr += `
+        ${item.key}: ${
+        item.rule === "repeated" ? `Array<${item.name}>` : item.name
+      };
+      `;
       str += `interface ${item.name} {
         ${formatBody(item.code)}
       };`;
     });
   }
   return `
+    /** 功能号 ${messageContent.funid} */
     interface ${messageContent.name} {
       ${formatBody(messageContent.code)}
+
+      ${parentStr}
     }
     ${str}
   `;
