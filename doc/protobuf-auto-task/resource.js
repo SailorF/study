@@ -22,8 +22,11 @@ const NEED_CHANGE_NUMBER = [
   "short",
 ];
 
+const PROTO_FILE_PATH = 'mtstable_protocol';
+
 module.exports = {
   GET_MESSAGE_REG,
   NEED_CHANGE_NUMBER,
   BASE_TYPE,
+  PROTO_FILE_PATH,
 };
