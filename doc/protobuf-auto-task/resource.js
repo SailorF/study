@@ -10,7 +10,12 @@ const BASE_TYPE = [
   "bool",
 ];
 
-const GET_MESSAGE_REG = /@funid (?<funid>\d+)[\s|\S]+?message (?<name>(\w+))[\s|\S]+?{(?<messageContent>[\s|\S]+?)}/g;
+// 获取功能号使用的消息头
+// const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+@descript\s+(?<desc>.+)[\s|\S]+?message/g;
+const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+?message\s+(?<name>(\w+))[\s|\S]+?{/g;
+// 获取所有消息体
+// const GET_ALL_MESSAGE_REG = /message (?<name>(\w+))[\s|\S]+?{(?<content>[\s|\S]+?)}/g;
+const GET_ALL_MESSAGE_REG = /message (?<name>(\w+))[\s|\S]+?{(?<content>[\s|\S]+?)}/g;
 
 const NEED_CHANGE_NUMBER = [
   "int",
@@ -22,10 +27,11 @@ const NEED_CHANGE_NUMBER = [
   "short",
 ];
 
-const PROTO_FILE_PATH = 'mtstable_protocol';
+const PROTO_FILE_PATH = "mtstable_protocol";
 
 module.exports = {
-  GET_MESSAGE_REG,
+  GET_FUNC_MESSAGE_REG,
+  GET_ALL_MESSAGE_REG,
   NEED_CHANGE_NUMBER,
   BASE_TYPE,
   PROTO_FILE_PATH,
