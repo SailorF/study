@@ -5,10 +5,7 @@ const protobuf = require("protobufjs");
 const root = new protobuf.Root();
 const iconv = require("iconv-lite");
 const childProgress = require("child_process");
-const {
-  baseTypeModule,
-  baseProtoModule,
-} = require("./template/commonModule");
+const { baseTypeModule, baseProtoModule } = require("./template/commonModule");
 const baseApiModule = require("./template/apiModule");
 const baseConfModule = require("./template/confModule");
 const {
@@ -74,12 +71,14 @@ function readSignFile(path) {
               funcid: funcList[i],
               name: funcMsg.groups.name,
               use: funcList.toString(),
+              descript: funcMsg.groups.descript.split(",")[i],
             };
           }
         } else {
           funcMsgCache[funcMsg.groups.funcid] = {
             funcid: funcMsg.groups.funcid,
             name: funcMsg.groups.name,
+            descript: funcMsg.groups.descript,
           };
         }
 
@@ -92,26 +91,6 @@ function readSignFile(path) {
         allMsg = GET_ALL_MESSAGE_REG.exec(code);
       }
 
-      while (funcMsg !== null) {
-        const funcid = funcMsg.groups.funcid;
-        if (funcid.indexOf(",") > 0) {
-          // 如果存在多个功能号使用同一个消息体的情况, 获取funlist并消除空格, 然后分组
-          let funcList = funcid.replace(/\s/g, "").split(",");
-          for (let i = 0; i < funcList.length; i++) {
-            funcMsgCache[funcList[i]] = {
-              funcid: funcList[i],
-              name: funcMsg.groups.name,
-            };
-          }
-        } else {
-          funcMsgCache[funcMsg.groups.funcid] = {
-            funcid: funcMsg.groups.funcid,
-            name: funcMsg.groups.name,
-          };
-        }
-
-        funcMsg = GET_FUNC_MESSAGE_REG.exec(code);
-      }
       root.load(path, { keepCase: true }, (err, bufCode) => {
         if (err) {
           console.log(err);
@@ -213,12 +192,9 @@ getAllFilePath()
         await writeTypeFile(mainMsg, msgChildList, allMsgCache);
       }
     }
-
-    return data;
-  })
-  .then((data) => {
     // 写配置文件
-    return writeConfFile(Object.values(data.funCache));
+    await writeConfFile(Object.values(funCache));
+    return data;
   })
   .then(() => {
     console.log("任务完成");
@@ -242,16 +218,19 @@ function writeConfFile(funArr) {
   // const filePath = path.resolve(__dirname, "./funConf/index.ts");
   // const { api, conf } = require(filePath);
   // console.log(api, conf);
-  const newApi = funArr.map((item) => {
+  const newApi = funArr.map((item, index) => {
+    // 如果有多个功能号使用同一个消息头,则会导致功能号合并, 在这里加入index避免合并问题
+    const name = item.use ? `${item.name}_${index}` : item.name;
     return {
-      [item.name]: item.funcid,
+      ...item,
+      realName: item.name,
+      name: name,
     };
   });
-  const AssingApi = Object.assign({}, ...newApi);
   const apiPath = path.resolve(__dirname, "./funConf/FUNAPI.ts");
   const confPath = path.resolve(__dirname, "./funConf/FUNCONF.ts");
-  fs.writeFileSync(apiPath, baseApiModule(AssingApi), "utf-8");
-  fs.writeFileSync(confPath, baseConfModule(AssingApi), "utf-8");
+  fs.writeFileSync(apiPath, baseApiModule(newApi), "utf-8");
+  fs.writeFileSync(confPath, baseConfModule(newApi), "utf-8");
 }
 
 async function writeProtoFile(main, childlist) {

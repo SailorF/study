@@ -1,9 +1,17 @@
-function baseConfModule(api) {
+function baseConfModule(apiList) {
   let str = "";
   let importStr = "";
-  for (let k of Object.keys(api)) {
-    importStr += `const ${k.toLocaleLowerCase()} = require('../proto/${k}.js'); \n`;
-    str += `[FUNAPI.${k.toLocaleUpperCase()}]: cls(${k.toLocaleLowerCase()}), \n`;
+  let hadRequire = {};
+  for (let i = 0; i < apiList.length; i++) {
+    const apiItem = apiList[i];
+    if (!hadRequire[apiItem.realName]) {
+      hadRequire[apiItem.realName] = true;
+      importStr += `const ${apiItem.realName.toLocaleLowerCase()} = require('../proto/${
+        apiItem.realName
+      }.js'); \n`;
+    }
+
+    str += `[FUNAPI.${apiItem.name.toLocaleUpperCase()}]: cls(${apiItem.realName.toLocaleLowerCase()}), \n`;
   }
   return `
     const FUNAPI = require('./FUNAPI.ts');

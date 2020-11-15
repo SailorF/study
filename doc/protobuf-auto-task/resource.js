@@ -12,7 +12,7 @@ const BASE_TYPE = [
 
 // 获取功能号使用的消息头
 // const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+@descript\s+(?<desc>.+)[\s|\S]+?message/g;
-const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+?message\s+(?<name>(\w+))[\s|\S]+?{/g;
+const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+?@descript\s+(?<descript>.+)??[\r|\n][\s|\S]+?message\s+(?<name>(\w+))[\s|\S]+?{/g;
 // 获取所有消息体
 // const GET_ALL_MESSAGE_REG = /message (?<name>(\w+))[\s|\S]+?{(?<content>[\s|\S]+?)}/g;
 const GET_ALL_MESSAGE_REG = /message (?<name>(\w+))[\s|\S]+?{(?<content>[\s|\S]+?)}/g;
