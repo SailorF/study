@@ -1,5 +1,4 @@
 class myEvent {
-
   constructor(maxlength = 10) {
     this.eventList = {};
     this.maxlength = maxlength;
@@ -11,15 +10,14 @@ class myEvent {
   }
 
   emit(name) {
-    this.eventList[name].forEach(fn => {
+    this.eventList[name].forEach((fn) => {
       fn.apply(this, [].slice.call(arguments, 1));
-    })
+    });
   }
-
 }
 
-var a = new myEvent()
-a.on('fire', function(name) {
-    console.log(name);
+var a = new myEvent();
+a.on("fire", function (name) {
+  console.log(name);
 });
-a.emit('fire', 1)
+a.emit("fire", 1);

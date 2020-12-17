@@ -1,14 +1,4 @@
-const BASE_TYPE = [
-  "int",
-  "int32",
-  "int64",
-  "float",
-  "double",
-  "long",
-  "short",
-  "string",
-  "bool",
-];
+const BASE_TYPE = ['int', 'int32', 'int64', 'uint32', 'uint64', 'float', 'double', 'long', 'short', 'string', 'bool'];
 
 // 获取功能号使用的消息头
 // const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+@descript\s+(?<desc>.+)[\s|\S]+?message/g;
@@ -17,22 +7,17 @@ const GET_FUNC_MESSAGE_REG = /@funcid\s+(?<funcid>.+)??[\r|\n][\s|\S]+?@descript
 // const GET_ALL_MESSAGE_REG = /message (?<name>(\w+))[\s|\S]+?{(?<content>[\s|\S]+?)}/g;
 const GET_ALL_MESSAGE_REG = /message (?<name>(\w+))[\s|\S]+?{(?<content>[\s|\S]+?)}/g;
 
-const NEED_CHANGE_NUMBER = [
-  "int",
-  "int32",
-  "int64",
-  "float",
-  "double",
-  "long",
-  "short",
-];
+const NEED_CHANGE_NUMBER = ['int', 'int32', 'int64', 'uint32', 'uint64', 'float', 'double', 'long', 'short'];
 
-const PROTO_FILE_PATH = "mtstable_protocol";
+const PROTO_FILE_PATH = 'origin_protocol';
+
+const INGORE_FILE = ['DIY_mrs_interface.proto', 'DIY_cachedata_sync.proto'];
 
 module.exports = {
-  GET_FUNC_MESSAGE_REG,
-  GET_ALL_MESSAGE_REG,
-  NEED_CHANGE_NUMBER,
-  BASE_TYPE,
-  PROTO_FILE_PATH,
+    GET_FUNC_MESSAGE_REG,
+    GET_ALL_MESSAGE_REG,
+    NEED_CHANGE_NUMBER,
+    BASE_TYPE,
+    PROTO_FILE_PATH,
+    INGORE_FILE,
 };
